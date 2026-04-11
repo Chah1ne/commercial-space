@@ -9,7 +9,9 @@ async function startServer() {
   const app = express();
 
   // Serve static files from dist/public
-  const staticPath = path.join(__dirname, "dist", "public");
+  const staticPath = fs.existsSync(path.join(__dirname, "dist", "public")) 
+    ? path.join(__dirname, "dist", "public")
+    : path.join(__dirname, "public");
 
   console.log(`[Server] Starting with static path: ${staticPath}`);
   console.log(`[Server] Static path exists: ${fs.existsSync(staticPath)}`);
