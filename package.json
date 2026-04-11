@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "vite --host",
-    "build": "vite build && cp -r client/dist/public/* .",
+    "build": "vite build",
     "start": "NODE_ENV=production node server.js",
     "preview": "vite preview --host",
     "check": "tsc --noEmit",
