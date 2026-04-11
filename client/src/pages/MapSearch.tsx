@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,8 +8,13 @@ import { Badge } from "@/components/ui/badge";
 import { mockProperties, propertyTypes, categories, cities } from "@/data/mockData";
 import { MapPin, Search, DollarSign, Ruler, Eye, X } from "lucide-react";
 import { Property } from "@/types/property";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
 const MapSearch = () => {
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<L.Map | null>(null);
+  const markersRef = useRef<L.Marker[]>([]);
   const [selectedCity, setSelectedCity] = useState("Montréal");
   const [selectedType, setSelectedType] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -47,6 +52,81 @@ const MapSearch = () => {
     industriel: "Industriel",
     terrain: "Terrain",
   };
+
+  // Coordonnées des villes québécoises
+  const cityCoordinates: Record<string, [number, number]> = {
+    "Montréal": [45.5017, -73.5673],
+    "Québec": [46.8139, -71.2080],
+    "Gatineau": [45.4425, -75.6992],
+    "Laval": [45.5695, -73.7445],
+    "Longueuil": [45.5406, -73.5323],
+  };
+
+  // Initialize map
+  useEffect(() => {
+    if (!mapContainerRef.current) return;
+
+    // Only initialize once
+    if (mapRef.current) return;
+
+    const coordinates = cityCoordinates[selectedCity] || [46, -73];
+    
+    // Create map
+    mapRef.current = L.map(mapContainerRef.current).setView(coordinates, 11);
+
+    // Add OpenStreetMap tiles
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '&copy; OpenStreetMap contributors',
+      maxZoom: 19,
+    }).addTo(mapRef.current);
+
+    return () => {
+      // Cleanup on unmount
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    };
+  }, []);
+
+  // Update map when city changes
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    const coordinates = cityCoordinates[selectedCity] || [46, -73];
+    mapRef.current.setView(coordinates, 11);
+  }, [selectedCity]);
+
+  // Update markers when filtered properties change
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    // Clear existing markers
+    markersRef.current.forEach((marker) => marker.remove());
+    markersRef.current = [];
+
+    // Add new markers
+    filteredProperties.forEach((property) => {
+      const lat = property.latitude || cityCoordinates[property.city]?.[0] || 45.5;
+      const lng = property.longitude || cityCoordinates[property.city]?.[1] || -73.5;
+
+      const marker = L.circleMarker([lat, lng], {
+        radius: 8,
+        fillColor: getMarkerColor(property.type),
+        color: "#fff",
+        weight: 2,
+        opacity: 1,
+        fillOpacity: 0.8,
+      })
+        .bindPopup(`<strong>${property.title}</strong><br/>${property.address}`, {
+          closeButton: false,
+        })
+        .on("click", () => setSelectedProperty(property));
+
+      marker.addTo(mapRef.current!);
+      markersRef.current.push(marker);
+    });
+  }, [filteredProperties]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -158,129 +238,85 @@ const MapSearch = () => {
         </div>
 
         {/* Map Area */}
-        <div className="flex-1 relative rounded-lg overflow-hidden bg-slate-100 flex items-center justify-center">
-          <div className="w-full h-full bg-gradient-to-br from-blue-50 to-slate-100 relative">
-            {/* Simulated Map Grid */}
-            <div className="absolute inset-0 grid grid-cols-4 grid-rows-4 opacity-10">
-              {Array.from({ length: 16 }).map((_, i) => (
-                <div key={i} className="border border-slate-300" />
+        <div className="flex-1 relative rounded-lg overflow-hidden bg-slate-100">
+          {/* Leaflet Map Container */}
+          <div
+            ref={mapContainerRef}
+            className="w-full h-full rounded-lg"
+            style={{ position: "relative" }}
+          />
+
+          {/* Map Info Overlay */}
+          <div className="absolute top-4 left-4 bg-white px-4 py-2 rounded-lg shadow-md z-[400]">
+            <p className="font-semibold text-slate-900">{selectedCity}</p>
+            <p className="text-xs text-slate-600">{filteredProperties.length} propriétés</p>
+          </div>
+
+          {/* Legend */}
+          <div className="absolute bottom-4 left-4 bg-white p-3 rounded-lg shadow-md z-[400]">
+            <p className="text-xs font-semibold mb-2 text-slate-900">Légende</p>
+            <div className="space-y-1.5 text-xs">
+              {Object.entries(typeLabels).map(([key, label]) => (
+                <div key={key} className="flex items-center gap-2">
+                  <div
+                    className="w-2.5 h-2.5 rounded-full"
+                    style={{ backgroundColor: getMarkerColor(key) }}
+                  />
+                  <span className="text-slate-700">{label}</span>
+                </div>
               ))}
             </div>
-
-            {/* Map Title */}
-            <div className="absolute top-4 left-4 bg-white px-4 py-2 rounded-lg shadow-md z-10">
-              <p className="font-semibold text-slate-900">{selectedCity}</p>
-              <p className="text-xs text-slate-600">{filteredProperties.length} propriétés</p>
-            </div>
-
-            {/* Legend */}
-            <div className="absolute bottom-4 left-4 bg-white p-3 rounded-lg shadow-md z-10">
-              <p className="text-xs font-semibold mb-2 text-slate-900">Légende</p>
-              <div className="space-y-1.5 text-xs">
-                {Object.entries(typeLabels).map(([key, label]) => (
-                  <div key={key} className="flex items-center gap-2">
-                    <div
-                      className="w-2.5 h-2.5 rounded-full"
-                      style={{ backgroundColor: getMarkerColor(key) }}
-                    />
-                    <span className="text-slate-700">{label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Property Markers */}
-            <div className="absolute inset-0">
-              {filteredProperties.map((property) => {
-                // Simulated positioning based on index
-                const lat = property.latitude || 45.5;
-                const lng = property.longitude || -73.5;
-                const x = ((lng + 74) / 2) * 100;
-                const y = ((46 - lat) * 100) / 1;
-                const isSelected = selectedProperty?.id === property.id;
-
-                return (
-                  <div
-                    key={property.id}
-                    className="absolute cursor-pointer"
-                    style={{
-                      left: `${Math.max(0, Math.min(100, x))}%`,
-                      top: `${Math.max(0, Math.min(100, y))}%`,
-                      transform: "translate(-50%, -50%)",
-                    }}
-                    onClick={() => setSelectedProperty(property)}
-                  >
-                    <div
-                      className={`transition-all ${
-                        isSelected
-                          ? "w-12 h-12 shadow-lg ring-4 ring-white"
-                          : "w-8 h-8 hover:w-10 hover:h-10 hover:shadow-md"
-                      }`}
-                      style={{
-                        backgroundColor: getMarkerColor(property.type),
-                        borderRadius: "50%",
-                        border: isSelected ? "3px solid white" : "2px solid white",
-                      }}
-                    >
-                      <div className="w-full h-full flex items-center justify-center text-white text-xs font-bold">
-                        {property.id}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Property Info Card */}
-            {selectedProperty && (
-              <div className="absolute right-4 bottom-4 w-80 bg-white rounded-lg shadow-xl z-20 overflow-hidden animate-in">
-                <div className="relative h-40 bg-slate-200 overflow-hidden">
-                  <img
-                    src={selectedProperty.images[0]}
-                    alt={selectedProperty.title}
-                    className="w-full h-full object-cover"
-                  />
-                  <button
-                    onClick={() => setSelectedProperty(null)}
-                    className="absolute top-2 right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center hover:bg-slate-100"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-
-                <div className="p-4 space-y-3">
-                  <div>
-                    <h3 className="font-bold text-foreground line-clamp-1">
-                      {selectedProperty.title}
-                    </h3>
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                      <MapPin className="w-3 h-3" />
-                      {selectedProperty.address}, {selectedProperty.city}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                    <div className="bg-slate-50 p-2 rounded">
-                      <p className="text-muted-foreground mb-0.5">Superficie</p>
-                      <p className="font-semibold">{selectedProperty.area.toLocaleString()} pi²</p>
-                    </div>
-                    <div className="bg-slate-50 p-2 rounded">
-                      <p className="text-muted-foreground mb-0.5">Prix</p>
-                      <p className="font-semibold text-accent">${selectedProperty.price}</p>
-                    </div>
-                    <div className="bg-slate-50 p-2 rounded">
-                      <p className="text-muted-foreground mb-0.5">Vues</p>
-                      <p className="font-semibold">{selectedProperty.views}</p>
-                    </div>
-                  </div>
-
-                  <Button className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
-                    Voir les détails
-                  </Button>
-                </div>
-              </div>
-            )}
           </div>
+
+          {/* Property Info Card */}
+          {selectedProperty && (
+            <div className="absolute right-4 bottom-4 w-80 bg-white rounded-lg shadow-xl z-20 overflow-hidden animate-in">
+              <div className="relative h-40 bg-slate-200 overflow-hidden">
+                <img
+                  src={selectedProperty.images[0]}
+                  alt={selectedProperty.title}
+                  className="w-full h-full object-cover"
+                />
+                <button
+                  onClick={() => setSelectedProperty(null)}
+                  className="absolute top-2 right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center hover:bg-slate-100"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="p-4 space-y-3">
+                <div>
+                  <h3 className="font-bold text-foreground line-clamp-1">
+                    {selectedProperty.title}
+                  </h3>
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                    <MapPin className="w-3 h-3" />
+                    {selectedProperty.address}, {selectedProperty.city}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                  <div className="bg-slate-50 p-2 rounded">
+                    <p className="text-muted-foreground mb-0.5">Superficie</p>
+                    <p className="font-semibold">{selectedProperty.area.toLocaleString()} pi²</p>
+                  </div>
+                  <div className="bg-slate-50 p-2 rounded">
+                    <p className="text-muted-foreground mb-0.5">Prix</p>
+                    <p className="font-semibold text-accent">${selectedProperty.price}</p>
+                  </div>
+                  <div className="bg-slate-50 p-2 rounded">
+                    <p className="text-muted-foreground mb-0.5">Vues</p>
+                    <p className="font-semibold">{selectedProperty.views}</p>
+                  </div>
+                </div>
+
+                <Button className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
+                  Voir les détails
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
