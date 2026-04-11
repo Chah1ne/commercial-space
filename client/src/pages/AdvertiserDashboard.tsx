@@ -5,9 +5,11 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, Eye, BarChart3, Star, Settings, LogOut, TrendingUp, Users, Calendar } from "lucide-react";
 import { mockProperties } from "@/data/mockData";
+import CreateAnnouncementForm from "@/components/CreateAnnouncementForm";
 
 const AdvertiserDashboard = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [showCreateForm, setShowCreateForm] = useState(false);
   const [propertyStats] = useState({
     total: mockProperties.length,
     active: mockProperties.filter(p => !p.featured).length,
@@ -26,7 +28,10 @@ const AdvertiserDashboard = () => {
             <p className="text-sm text-muted-foreground">Gérez vos annonces et consultez vos statistiques</p>
           </div>
           <div className="flex items-center gap-3">
-            <Button className="bg-accent hover:bg-accent/90 text-accent-foreground gap-2">
+            <Button
+              onClick={() => setShowCreateForm(true)}
+              className="bg-accent hover:bg-accent/90 text-accent-foreground gap-2"
+            >
               <Plus className="w-4 h-4" />
               Nouvelle annonce
             </Button>
@@ -114,7 +119,10 @@ const AdvertiserDashboard = () => {
           <TabsContent value="listings" className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-semibold text-foreground">Gérer vos annonces</h3>
-              <Button className="bg-accent hover:bg-accent/90 text-accent-foreground gap-2">
+              <Button
+                onClick={() => setShowCreateForm(true)}
+                className="bg-accent hover:bg-accent/90 text-accent-foreground gap-2"
+              >
                 <Plus className="w-4 h-4" />
                 Nouvelle annonce
               </Button>
@@ -277,6 +285,18 @@ const AdvertiserDashboard = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Create Announcement Modal */}
+      {showCreateForm && (
+        <CreateAnnouncementForm
+          onClose={() => setShowCreateForm(false)}
+          onSubmit={(data) => {
+            console.log("[v0] New announcement submitted:", data);
+            // Here you would typically send the data to your backend
+            setShowCreateForm(false);
+          }}
+        />
+      )}
     </div>
   );
 };
