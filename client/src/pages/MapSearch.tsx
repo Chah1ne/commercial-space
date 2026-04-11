@@ -268,56 +268,55 @@ const MapSearch = () => {
             </div>
           </div>
 
-            {/* Property Info Card */}
-            {selectedProperty && (
-              <div className="absolute right-4 bottom-4 w-80 bg-white rounded-lg shadow-xl z-20 overflow-hidden animate-in">
-                <div className="relative h-40 bg-slate-200 overflow-hidden">
-                  <img
-                    src={selectedProperty.images[0]}
-                    alt={selectedProperty.title}
-                    className="w-full h-full object-cover"
-                  />
-                  <button
-                    onClick={() => setSelectedProperty(null)}
-                    className="absolute top-2 right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center hover:bg-slate-100"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-
-                <div className="p-4 space-y-3">
-                  <div>
-                    <h3 className="font-bold text-foreground line-clamp-1">
-                      {selectedProperty.title}
-                    </h3>
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                      <MapPin className="w-3 h-3" />
-                      {selectedProperty.address}, {selectedProperty.city}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                    <div className="bg-slate-50 p-2 rounded">
-                      <p className="text-muted-foreground mb-0.5">Superficie</p>
-                      <p className="font-semibold">{selectedProperty.area.toLocaleString()} pi²</p>
-                    </div>
-                    <div className="bg-slate-50 p-2 rounded">
-                      <p className="text-muted-foreground mb-0.5">Prix</p>
-                      <p className="font-semibold text-accent">${selectedProperty.price}</p>
-                    </div>
-                    <div className="bg-slate-50 p-2 rounded">
-                      <p className="text-muted-foreground mb-0.5">Vues</p>
-                      <p className="font-semibold">{selectedProperty.views}</p>
-                    </div>
-                  </div>
-
-                  <Button className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
-                    Voir les détails
-                  </Button>
-                </div>
+          {/* Property Info Card */}
+          {selectedProperty && (
+            <div className="absolute right-4 bottom-4 w-80 bg-white rounded-lg shadow-xl z-20 overflow-hidden animate-in">
+              <div className="relative h-40 bg-slate-200 overflow-hidden">
+                <img
+                  src={selectedProperty.images[0]}
+                  alt={selectedProperty.title}
+                  className="w-full h-full object-cover"
+                />
+                <button
+                  onClick={() => setSelectedProperty(null)}
+                  className="absolute top-2 right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center hover:bg-slate-100"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
-            )}
-          </div>
+
+              <div className="p-4 space-y-3">
+                <div>
+                  <h3 className="font-bold text-foreground line-clamp-1">
+                    {selectedProperty.title}
+                  </h3>
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                    <MapPin className="w-3 h-3" />
+                    {selectedProperty.address}, {selectedProperty.city}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                  <div className="bg-slate-50 p-2 rounded">
+                    <p className="text-muted-foreground mb-0.5">Superficie</p>
+                    <p className="font-semibold">{selectedProperty.area.toLocaleString()} pi²</p>
+                  </div>
+                  <div className="bg-slate-50 p-2 rounded">
+                    <p className="text-muted-foreground mb-0.5">Prix</p>
+                    <p className="font-semibold text-accent">${selectedProperty.price}</p>
+                  </div>
+                  <div className="bg-slate-50 p-2 rounded">
+                    <p className="text-muted-foreground mb-0.5">Vues</p>
+                    <p className="font-semibold">{selectedProperty.views}</p>
+                  </div>
+                </div>
+
+                <Button className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
+                  Voir les détails
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
