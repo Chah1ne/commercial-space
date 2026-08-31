@@ -14,7 +14,7 @@ import "leaflet/dist/leaflet.css";
 const MapSearch = () => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
-  const markersRef = useRef<L.Marker[]>([]);
+  const markersRef = useRef<L.Layer[]>([]);
   const [selectedCity, setSelectedCity] = useState("Montréal");
   const [selectedType, setSelectedType] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
