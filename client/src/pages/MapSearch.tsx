@@ -159,7 +159,7 @@ const MapSearch = () => {
                     <SelectValue placeholder="Tous" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Tous</SelectItem>
+                    <SelectItem value="">Tous</SelectItem>
                     {propertyTypes.map((type) => (
                       <SelectItem key={type.value} value={type.value}>
                         {type.label}
@@ -176,7 +176,7 @@ const MapSearch = () => {
                     <SelectValue placeholder="Tous" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Tous</SelectItem>
+                    <SelectItem value="">Tous</SelectItem>
                     {categories.map((cat) => (
                       <SelectItem key={cat.value} value={cat.value}>
                         {cat.label}
